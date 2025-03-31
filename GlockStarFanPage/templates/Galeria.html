@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Galería de Recuerdos - GlockStar Fanpage</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/logo.webp') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: #1a1a1a; /* Fondo negro */
+            color: #e6e6e6; /* Texto claro para contraste */
+            margin: 0;
+            padding: 0;
+            font-size: 16px;
+            line-height: 1.6;
+            box-sizing: border-box;
+        }
+        
+        header {
+            background-color: #2d1a3a; /* Fondo violeta oscuro */
+            padding: 10px;
+            position: relative;
+            text-align: right;
+            display: flex;
+            justify-content: right;
+            align-items: right;
+        }
+        
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+        
+        a {
+            color: #bb86fc; /* Violeta claro */
+            text-decoration: none;
+            font-weight: bold;
+            padding: 5px 10px;
+        }
+        
+        a:hover {
+            color: #d7b8ff; /* Violeta más claro al pasar el mouse */
+            text-decoration: underline;
+        }
+        
+        .content {
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin: 20px 0 10px;
+            padding: 0;
+            font-weight: bold;
+            color: #bb86fc; /* Violeta claro */
+        }
+        
+        h1 i {
+            color: #9370DB; /* Violeta medio */
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin: 30px 0 20px;
+            color: #bb86fc; /* Violeta claro */
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            padding: 0;
+            font-weight: bold;
+            color: #9370DB; /* Violeta medio */
+        }
+        
+        p {
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        .gallery-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-top: 30px;
+            position: relative;
+            min-height: 200px;
+        }
+        
+        .memory-card {
+            background-color: #2d1a3a;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            text-align: left;
+        }
+        
+        .memory-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .memory-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 2px solid #bb86fc;
+        }
+        
+        .memory-content {
+            padding: 15px;
+        }
+        
+        .memory-title {
+            color: #bb86fc;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .memory-text {
+            color: #e6e6e6;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .memory-date {
+            color: #9370DB;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+        
+        .upload-section {
+            background-color: #2d1a3a;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 40px auto;
+            max-width: 600px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .upload-section h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            width: 100%;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bb86fc;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #9370DB;
+            border-radius: 5px;
+            background-color: #1a1a1a;
+            color: #e6e6e6;
+            font-family: 'Playfair Display', serif;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        input[type="file"] {
+            background-color: #1a1a1a;
+            color: #e6e6e6;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #9370DB;
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 200px;
+        }
+        
+        button:hover {
+            background-color: #bb86fc;
+        }
+        
+        .no-memories {
+            color: #9370DB;
+            font-style: italic;
+            font-size: 1.2rem;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+        }
+        
+        footer {
+            background-color: #2d1a3a; /* Fondo violeta oscuro */
+            color: #e6e6e6;
+            padding: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        footer p {
+            padding: 0;
+        }
+        
+        footer p i {
+            color: #bb86fc; /* Violeta claro */
+            margin-right: 0.5rem;
+        }
+        
+        #memory-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('index') }}">Inicio</a>
+            <a href="{{ url_for('reddit') }}">Reddit</a>
+            <a href="{{ url_for('contacto') }}">Contacto</a>
+            <a href="{{ url_for('nosotros') }}">¿Quienes somos?</a>
+        </nav>
+    </header>
+    
+    <div class="content">
+        <h1><i class="fa-solid fa-images"></i> Galería de Recuerdos </h1>
+        <p>Comparte tus mejores momentos y anécdotas divertidas con la comunidad GlockStar. ¡Cada historia cuenta!</p>
+    </div>
+
+    <div class="gallery-container">
+        <div class="upload-section">
+            <h2>Comparte tu recuerdo</h2>
+            <form id="memory-form">
+                <div class="form-group">
+                    <label for="memory-title">Título</label>
+                    <input type="text" id="memory-title" name="title" placeholder="Título de tu recuerdo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memory-story">Tu historia</label>
+                    <textarea id="memory-story" name="story" placeholder="Cuéntanos tu anécdota divertida..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memory-image">Sube una imagen</label>
+                    <input type="file" id="memory-image" name="image" accept="image/*" required>
+                </div>
+                
+                <button type="submit">Publicar recuerdo</button>
+            </form>
+        </div>
+
+        <h2>Recuerdos compartidos</h2>
+        
+        <div id="gallery" class="gallery">
+            <!-- Aquí se mostrarán los recuerdos publicados -->
+            <p class="no-memories">Aún no hay recuerdos compartidos. ¡Sé el primero en compartir uno!</p>
+        </div>
+    </div>
+
+    <footer>
+        <p><i class="far fa-copyright"></i> 2025 Nuestra Historia. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // Obtener elementos del DOM
+        const memoryForm = document.getElementById('memory-form');
+        const gallery = document.getElementById('gallery');
+        const noMemoriesMessage = document.querySelector('.no-memories');
+        
+        // Función para formatear la fecha actual
+        function getCurrentDate() {
+            const months = [
+                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            
+            const now = new Date();
+            const day = now.getDate();
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            return `${day} de ${month}, ${year}`;
+        }
+        
+        // Manejar el envío del formulario
+        memoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener valores del formulario
+            const title = document.getElementById('memory-title').value;
+            const story = document.getElementById('memory-story').value;
+            const imageFile = document.getElementById('memory-image').files[0];
+            
+            // Verificar que se hayan completado todos los campos
+            if (!title || !story || !imageFile) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            // Crear URL para la imagen seleccionada
+            const imageURL = URL.createObjectURL(imageFile);
+            
+            // Eliminar el mensaje de "no hay recuerdos" si existe
+            if (noMemoriesMessage) {
+                noMemoriesMessage.remove();
+            }
+            
+            // Crear nueva tarjeta de memoria
+            const memoryCard = document.createElement('div');
+            memoryCard.className = 'memory-card';
+            
+            // Construir el contenido HTML de la tarjeta
+            memoryCard.innerHTML = `
+                <img src="${imageURL}" alt="${title}" class="memory-image">
+                <div class="memory-content">
+                    <h3 class="memory-title">${title}</h3>
+                    <p class="memory-text">${story}</p>
+                    <p class="memory-date">Publicado el ${getCurrentDate()}</p>
+                </div>
+            `;
+            
+            // Añadir la nueva tarjeta al principio de la galería
+            gallery.insertBefore(memoryCard, gallery.firstChild);
+            
+            // Limpiar el formulario
+            memoryForm.reset();
+            
+            // Mostrar mensaje de éxito
+            alert('¡Tu recuerdo ha sido publicado con éxito!');
+        });
+    </script>
+</body>
+</html>
