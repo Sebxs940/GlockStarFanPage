@@ -372,6 +372,28 @@
             return `${day} de ${month}, ${year}`;
         }
         
+        // Cargar recuerdos guardados en localStorage
+        function loadMemories() {
+            const memories = JSON.parse(localStorage.getItem('memories')) || [];
+            memories.forEach(memory => addMemoryToGallery(memory));
+        }
+        
+        // Agregar recuerdo a la galería
+        function addMemoryToGallery(memory) {
+            const { title, story, imageUrl } = memory;
+            const memoryCard = document.createElement('div');
+            memoryCard.className = 'memory-card';
+            memoryCard.innerHTML = `
+                <img src="${imageUrl}" alt="${title}" class="memory-image">
+                <div class="memory-content">
+                    <h3 class="memory-title">${title}</h3>
+                    <p class="memory-text">${story}</p>
+                    <p class="memory-date">Publicado el ${getCurrentDate()}</p>
+                </div>
+            `;
+            gallery.insertBefore(memoryCard, gallery.firstChild);
+        }
+        
         // Manejar el envío del formulario
         memoryForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -390,27 +412,18 @@
             // Crear URL para la imagen seleccionada
             const imageURL = URL.createObjectURL(imageFile);
             
+            // Guardar recuerdo en localStorage
+            const memories = JSON.parse(localStorage.getItem('memories')) || [];
+            memories.push({ title, story, imageUrl });
+            localStorage.setItem('memories', JSON.stringify(memories));
+            
             // Eliminar el mensaje de "no hay recuerdos" si existe
             if (noMemoriesMessage) {
                 noMemoriesMessage.remove();
             }
             
-            // Crear nueva tarjeta de memoria
-            const memoryCard = document.createElement('div');
-            memoryCard.className = 'memory-card';
-            
-            // Construir el contenido HTML de la tarjeta
-            memoryCard.innerHTML = `
-                <img src="${imageURL}" alt="${title}" class="memory-image">
-                <div class="memory-content">
-                    <h3 class="memory-title">${title}</h3>
-                    <p class="memory-text">${story}</p>
-                    <p class="memory-date">Publicado el ${getCurrentDate()}</p>
-                </div>
-            `;
-            
-            // Añadir la nueva tarjeta al principio de la galería
-            gallery.insertBefore(memoryCard, gallery.firstChild);
+            // Agregar recuerdo a la galería
+            addMemoryToGallery({ title, story, imageUrl });
             
             // Limpiar el formulario
             memoryForm.reset();
@@ -418,6 +431,9 @@
             // Mostrar mensaje de éxito
             alert('¡Tu recuerdo ha sido publicado con éxito!');
         });
+        
+        // Cargar recuerdos al cargar la página
+        window.onload = loadMemories;
     </script>
 </body>
 </html>
