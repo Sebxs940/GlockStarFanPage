@@ -27,11 +27,11 @@ Session(app)
 # Rutas principales
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('Index.html')
 
 @app.route('/galeria')
 def galeria():
-    return render_template('galeria.html')
+    return render_template('Galeria.html')
 
 @app.route('/reddit')
 def reddit():
@@ -39,7 +39,7 @@ def reddit():
     error = request.args.get('error')
     success = request.args.get('success')
     
-    return render_template('reddit.html', error=error, success=success)
+    return render_template('Reddit.html', error=error, success=success)
 
 @app.route('/contacto', methods=['GET', 'POST'])
 def contacto():
@@ -73,11 +73,11 @@ def contacto():
             return redirect(url_for('contacto'))
     
     # Si es una solicitud GET, mostrar la página de contacto
-    return render_template('contacto.html')
+    return render_template('Contacto.html')
 
 @app.route('/nosotros')
 def nosotros():
-    return render_template('nosotros.html')
+    return render_template('Nosotros.html')
 
 # Rutas para la API de Reddit
 @app.route('/api/reddit/auth-url')
