@@ -25,8 +25,8 @@
             position: relative;
             text-align: right;
             display: flex;
-            justify-content: right;
-            align-items: right;
+            justify-content: space-between;
+            align-items: center;
         }
         
         nav {
@@ -248,11 +248,56 @@
             margin-right: 0.5rem;
         }
         
-        #memory-form {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        @media (max-width: 768px) {
+            .gallery-container {
+                padding: 10px;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .memory-card {
+                padding: 10px;
+            }
+            
+            .memory-image {
+                height: 150px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .upload-section h2 {
+                margin-bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery-container {
+                padding: 5px;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .memory-card {
+                padding: 5px;
+            }
+            
+            .memory-image {
+                height: 100px;
+            }
+            
+            .form-group {
+                margin-bottom: 10px;
+            }
+            
+            .upload-section h2 {
+                margin-bottom: 15px;
+            }
         }
     </style>
 </head>

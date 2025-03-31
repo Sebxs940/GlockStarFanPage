@@ -245,6 +245,28 @@
             height: 100%;
             border: none;
         }
+        
+        @media screen and (max-width: 768px) {
+            .contact-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .contact-info, .contact-form {
+                min-width: 100%;
+                width: 100%;
+            }
+            
+            .map-container {
+                height: 200px;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .map-container {
+                height: 150px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -286,13 +308,6 @@
                     <div>
                         <strong>Horario:</strong>
                         <p>24/7 - Siempre disponibles para los fans</p>
-                    </div>
-                    <div class="contact-method">
-                        <i class="fa-solid fa-tree"></i>
-                        <div>
-                            <strong>Clover Space:</strong>
-                            <p>https://clover.space/s/ch/1IYY339mqCB</p>
-                        </div>
                     </div>
                 </div>
                 

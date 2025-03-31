@@ -374,6 +374,54 @@
             .left::after, .right::after {
                 left: 21px;
             }
+            
+            .team-member {
+                min-width: 200px;
+                max-width: 250px;
+            }
+            
+            .value-card {
+                min-width: 200px;
+                max-width: 300px;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .timeline::after {
+                left: 21px;
+            }
+            
+            .timeline-item {
+                padding-left: 50px;
+                padding-right: 15px;
+            }
+            
+            .timeline-item::after {
+                left: 11px;
+            }
+            
+            .left, .right {
+                left: 0;
+                text-align: left;
+            }
+            
+            .left::after, .right::after {
+                left: 11px;
+            }
+            
+            .team-member {
+                min-width: 150px;
+                max-width: 200px;
+            }
+            
+            .value-card {
+                min-width: 150px;
+                max-width: 250px;
+            }
+            
+            .about-section, .mission-container, .timeline, .team-container, .values-container, .stats-container, .quote-container {
+                padding: 10px;
+            }
         }
     </style>
 </head>
