@@ -231,6 +231,23 @@
             width: 100%;
         }
         
+        .loading {
+            color: #bb86fc;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+        
+        .error-message {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-left: 4px solid #ff0000;
+            color: #ff6b6b;
+            padding: 10px 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
         footer {
             background-color: #2d1a3a; /* Fondo violeta oscuro */
             color: #e6e6e6;
@@ -335,7 +352,7 @@
                     <input type="file" id="memory-image" name="image" accept="image/*" required>
                 </div>
                 
-                <button type="submit">Publicar recuerdo</button>
+                <button type="submit" id="submit-button">Publicar recuerdo</button>
             </form>
         </div>
 
@@ -343,7 +360,7 @@
         
         <div id="gallery" class="gallery">
             <!-- Aquí se mostrarán los recuerdos publicados -->
-            <p class="no-memories">Aún no hay recuerdos compartidos. ¡Sé el primero en compartir uno!</p>
+            <p class="no-memories">Cargando recuerdos...</p>
         </div>
     </div>
 
@@ -352,99 +369,155 @@
     </footer>
 
     <script>
-       // Obtener elementos del DOM
-const memoryForm = document.getElementById('memory-form');
-const gallery = document.getElementById('gallery');
-const noMemoriesMessage = document.querySelector('.no-memories');
-
-// Función para formatear la fecha actual
-function getCurrentDate() {
-    const months = [
-        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
-    
-    const now = new Date();
-    const day = now.getDate();
-    const month = months[now.getMonth()];
-    const year = now.getFullYear();
-    
-    return `${day} de ${month}, ${year}`;
-}
-
-// Cargar recuerdos guardados en localStorage
-function loadMemories() {
-    const memories = JSON.parse(localStorage.getItem('memories')) || [];
-    
-    // Eliminar el mensaje de "no hay recuerdos" si hay recuerdos
-    if (memories.length > 0 && noMemoriesMessage) {
-        noMemoriesMessage.remove();
-    }
-    
-    memories.forEach(addMemoryToGallery);
-}
-
-// Agregar recuerdo a la galería
-function addMemoryToGallery(memory) {
-    const { title, story, imageData } = memory;
-    const memoryCard = document.createElement('div');
-    memoryCard.className = 'memory-card';
-    memoryCard.innerHTML = `
-        <img src="${imageData}" alt="${title}" class="memory-image">
-        <div class="memory-content">
-            <h3 class="memory-title">${title}</h3>
-            <p class="memory-text">${story}</p>
-            <p class="memory-date">Publicado el ${getCurrentDate()}</p>
-        </div>
-    `;
-    gallery.insertBefore(memoryCard, gallery.firstChild);
-}
-
-// Manejar el envío del formulario
-memoryForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Obtener valores del formulario
-    const title = document.getElementById('memory-title').value;
-    const story = document.getElementById('memory-story').value;
-    const imageFile = document.getElementById('memory-image').files[0];
-    
-    // Verificar que se hayan completado todos los campos
-    if (!title || !story || !imageFile) {
-        alert('Por favor completa todos los campos');
-        return;
-    }
-    
-    // Leer la imagen como Data URL para poder guardarla en localStorage
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const imageData = event.target.result; // Esto es un Data URL
+        // Obtener elementos del DOM
+        const memoryForm = document.getElementById('memory-form');
+        const gallery = document.getElementById('gallery');
+        const submitButton = document.getElementById('submit-button');
+        let noMemoriesMessage = document.querySelector('.no-memories');
         
-        // Guardar recuerdo en localStorage
-        const memories = JSON.parse(localStorage.getItem('memories')) || [];
-        memories.push({ title, story, imageData });
-        localStorage.setItem('memories', JSON.stringify(memories));
-        
-        // Eliminar el mensaje de "no hay recuerdos" si existe
-        if (noMemoriesMessage) {
-            noMemoriesMessage.remove();
+        // Función para mostrar mensaje de error
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            memoryForm.appendChild(errorDiv);
+            
+            // Eliminar el mensaje después de 5 segundos
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
         }
         
-        // Agregar recuerdo a la galería
-        addMemoryToGallery({ title, story, imageData });
+        // Función para agregar recuerdo a la galería
+        function addMemoryToGallery(memory) {
+            const memoryCard = document.createElement('div');
+            memoryCard.className = 'memory-card';
+            memoryCard.innerHTML = `
+                <img src="${memory.imageUrl}" alt="${memory.title}" class="memory-image">
+                <div class="memory-content">
+                    <h3 class="memory-title">${memory.title}</h3>
+                    <p class="memory-text">${memory.story}</p>
+                    <p class="memory-date">Publicado el ${memory.date}</p>
+                </div>
+            `;
+            gallery.insertBefore(memoryCard, gallery.firstChild);
+        }
         
-        // Limpiar el formulario
-        memoryForm.reset();
+        // Cargar recuerdos desde el servidor
+        async function loadMemories() {
+            try {
+                const response = await fetch('/api/memories');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Limpiar la galería
+                    gallery.innerHTML = '';
+                    
+                    const memories = data.memories;
+                    
+                    if (memories.length === 0) {
+                        gallery.innerHTML = '<p class="no-memories">Aún no hay recuerdos compartidos. ¡Sé el primero en compartir uno!</p>';
+                        noMemoriesMessage = document.querySelector('.no-memories');
+                    } else {
+                        // Ordenar recuerdos del más reciente al más antiguo (si tienen fecha)
+                        memories.sort((a, b) => {
+                            // Si no hay fecha, mostrar primero los más recientes (asumiendo que están en orden)
+                            return -1;
+                        });
+                        
+                        // Agregar cada recuerdo a la galería
+                        memories.forEach(addMemoryToGallery);
+                    }
+                } else {
+                    throw new Error(data.error || 'Error al cargar los recuerdos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                gallery.innerHTML = '<p class="no-memories">Error al cargar los recuerdos. Por favor, intenta más tarde.</p>';
+                noMemoriesMessage = document.querySelector('.no-memories');
+            }
+        }
         
-        // Mostrar mensaje de éxito
-        alert('¡Tu recuerdo ha sido publicado con éxito!');
-    };
-    
-    reader.readAsDataURL(imageFile);
-});
-
-// Cargar recuerdos al cargar la página
-window.onload = loadMemories;
+        // Manejar el envío del formulario
+        memoryForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Obtener valores del formulario
+            const title = document.getElementById('memory-title').value;
+            const story = document.getElementById('memory-story').value;
+            const imageFile = document.getElementById('memory-image').files[0];
+            
+            // Verificar que se hayan completado todos los campos
+            if (!title || !story || !imageFile) {
+                showError('Por favor completa todos los campos');
+                return;
+            }
+            
+            // Cambiar texto del botón y deshabilitarlo durante el envío
+            const originalButtonText = submitButton.textContent;
+            submitButton.textContent = 'Publicando...';
+            submitButton.disabled = true;
+            
+            try {
+                // Leer la imagen como Data URL
+                const reader = new FileReader();
+                reader.onload = async function(event) {
+                    const imageData = event.target.result; // Data URL
+                    
+                    // Crear FormData para enviar al servidor
+                    const formData = new FormData();
+                    formData.append('title', title);
+                    formData.append('story', story);
+                    formData.append('image', imageData);
+                    
+                    try {
+                        // Enviar datos al servidor
+                        const response = await fetch('/api/memories', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // Eliminar el mensaje de "no hay recuerdos" si existe
+                            if (noMemoriesMessage) {
+                                noMemoriesMessage.remove();
+                                noMemoriesMessage = null;
+                            }
+                            
+                            // Agregar el nuevo recuerdo a la galería
+                            addMemoryToGallery(data.memory);
+                            
+                            // Limpiar el formulario
+                            memoryForm.reset();
+                            
+                            // Mostrar mensaje de éxito
+                            alert('¡Tu recuerdo ha sido publicado con éxito!');
+                        } else {
+                            throw new Error(data.error || 'Error al publicar el recuerdo');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showError('Error al publicar: ' + error.message);
+                    } finally {
+                        // Restaurar el botón
+                        submitButton.textContent = originalButtonText;
+                        submitButton.disabled = false;
+                    }
+                };
+                
+                reader.readAsDataURL(imageFile);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al procesar la imagen');
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
+            }
+        });
+        
+        // Cargar recuerdos al cargar la página
+        window.onload = loadMemories;
     </script>
 </body>
 </html>
