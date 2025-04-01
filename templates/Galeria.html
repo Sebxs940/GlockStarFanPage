@@ -459,55 +459,47 @@
             submitButton.disabled = true;
             
             try {
-                // Leer la imagen como Data URL
-                const reader = new FileReader();
-                reader.onload = async function(event) {
-                    const imageData = event.target.result; // Data URL
-                    
-                    // Crear FormData para enviar al servidor
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    formData.append('story', story);
-                    formData.append('image', imageData);
-                    
-                    try {
-                        // Enviar datos al servidor
-                        const response = await fetch('/api/memories', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            // Eliminar el mensaje de "no hay recuerdos" si existe
-                            if (noMemoriesMessage) {
-                                noMemoriesMessage.remove();
-                                noMemoriesMessage = null;
-                            }
-                            
-                            // Agregar el nuevo recuerdo a la galería
-                            addMemoryToGallery(data.memory);
-                            
-                            // Limpiar el formulario
-                            memoryForm.reset();
-                            
-                            // Mostrar mensaje de éxito
-                            alert('¡Tu recuerdo ha sido publicado con éxito!');
-                        } else {
-                            throw new Error(data.error || 'Error al publicar el recuerdo');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        showError('Error al publicar: ' + error.message);
-                    } finally {
-                        // Restaurar el botón
-                        submitButton.textContent = originalButtonText;
-                        submitButton.disabled = false;
-                    }
-                };
+                // Crear FormData para enviar al servidor
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('story', story);
+                formData.append('image', imageFile); // Directamente el archivo de imagen
                 
-                reader.readAsDataURL(imageFile);
+                try {
+                    // Enviar datos al servidor
+                    const response = await fetch('/api/memories', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Eliminar el mensaje de "no hay recuerdos" si existe
+                        if (noMemoriesMessage) {
+                            noMemoriesMessage.remove();
+                            noMemoriesMessage = null;
+                        }
+                        
+                        // Agregar el nuevo recuerdo a la galería
+                        addMemoryToGallery(data.memory);
+                        
+                        // Limpiar el formulario
+                        memoryForm.reset();
+                        
+                        // Mostrar mensaje de éxito
+                        alert('¡Tu recuerdo ha sido publicado con éxito!');
+                    } else {
+                        throw new Error(data.error || 'Error al publicar el recuerdo');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('Error al publicar: ' + error.message);
+                } finally {
+                    // Restaurar el botón
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                }
             } catch (error) {
                 console.error('Error:', error);
                 showError('Error al procesar la imagen');

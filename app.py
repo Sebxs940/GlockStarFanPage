@@ -1,14 +1,14 @@
-import json
 import os
-from werkzeug.utils import secure_filename
-from datetime import datetime
 import base64
 import uuid
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
-import reddit_api
+from datetime import datetime
 import logging
 import time
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from werkzeug.utils import secure_filename
+import reddit_api
 from config import config
 
 # Configurar logging
@@ -26,6 +26,13 @@ config_name = os.environ.get('FLASK_CONFIG', 'default')
 app.config.from_object(config[config_name])
 config[config_name].init_app(app)
 
+# Configurar SQLAlchemy para usar SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///memories.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Inicializar SQLAlchemy
+db = SQLAlchemy(app)
+
 # Configurar sesión del lado del servidor
 Session(app)
 
@@ -33,30 +40,27 @@ Session(app)
 UPLOAD_FOLDER = os.path.join('static', 'uploads', 'gallery')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Lista para almacenar los recuerdos (en producción usarías una base de datos)
-MEMORIES_FILE = os.path.join('static', 'data', 'memories.json')
-os.makedirs(os.path.dirname(MEMORIES_FILE), exist_ok=True)
+# Definir el modelo Memory para la base de datos
+class Memory(db.Model):
+    id = db.Column(db.String(36), primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    story = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.String(200), nullable=False)
+    date = db.Column(db.String(50), nullable=False)
 
-# Función auxiliar para cargar recuerdos
-def load_memories():
-    try:
-        if os.path.exists(MEMORIES_FILE):
-            with open(MEMORIES_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return []
-    except Exception as e:
-        logger.error(f"Error al cargar recuerdos: {str(e)}")
-        return []
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'story': self.story,
+            'imageUrl': self.image_url,
+            'date': self.date
+        }
 
-# Función auxiliar para guardar recuerdos
-def save_memories(memories):
-    try:
-        with open(MEMORIES_FILE, 'w', encoding='utf-8') as f:
-            json.dump(memories, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception as e:
-        logger.error(f"Error al guardar recuerdos: {str(e)}")
-        return False
+# Función para crear las tablas de la base de datos
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 # Rutas principales
 @app.route('/')
@@ -104,8 +108,11 @@ def nosotros():
 @app.route('/api/memories', methods=['GET'])
 def get_memories():
     try:
-        memories = load_memories()
-        return jsonify({'success': True, 'memories': memories})
+        # Obtener todos los recuerdos de la base de datos
+        memories = Memory.query.all()
+        # Convertir los objetos Memory a diccionarios
+        memories_list = [memory.to_dict() for memory in memories]
+        return jsonify({'success': True, 'memories': memories_list})
     except Exception as e:
         logger.error(f"Error al obtener recuerdos: {str(e)}")
         return jsonify({'success': False, 'error': 'Error al cargar los recuerdos'})
@@ -120,6 +127,7 @@ def add_memory():
         if not all([title, story, image_data]):
             return jsonify({'success': False, 'error': 'Datos incompletos'})
         
+        # Procesar la imagen
         if image_data.startswith('data:image'):
             format_info, base64_str = image_data.split('base64,')
             image_format = 'png'
@@ -137,23 +145,27 @@ def add_memory():
         else:
             return jsonify({'success': False, 'error': 'Formato de imagen no válido'})
         
-        memory = {
-            'id': str(uuid.uuid4()),
-            'title': title,
-            'story': story,
-            'imageUrl': image_url,
-            'date': datetime.now().strftime('%d de %B, %Y')
-        }
+        # Crear un nuevo objeto Memory
+        memory_id = str(uuid.uuid4())
+        memory = Memory(
+            id=memory_id,
+            title=title,
+            story=story,
+            image_url=image_url,
+            date=datetime.now().strftime('%d de %B, %Y')
+        )
         
-        memories = load_memories()
-        memories.append(memory)
+        # Guardar el recuerdo en la base de datos
+        db.session.add(memory)
+        db.session.commit()
         
-        if save_memories(memories):
-            return jsonify({'success': True, 'memory': memory})
-        else:
-            return jsonify({'success': False, 'error': 'Error al guardar el recuerdo'})
+        return jsonify({
+            'success': True, 
+            'memory': memory.to_dict()
+        })
         
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Error al añadir recuerdo: {str(e)}")
         return jsonify({'success': False, 'error': f'Error interno: {str(e)}'})
 
