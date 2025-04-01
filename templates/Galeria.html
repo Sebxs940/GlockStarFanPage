@@ -375,7 +375,7 @@
         // Cargar recuerdos guardados en localStorage
         function loadMemories() {
             const memories = JSON.parse(localStorage.getItem('memories')) || [];
-            memories.forEach(memory => addMemoryToGallery(memory));
+            memories.forEach(addMemoryToGallery);
         }
         
         // Agregar recuerdo a la galería
