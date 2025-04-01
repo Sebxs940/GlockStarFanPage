@@ -40,7 +40,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Probar conexión a la base de datos
-with app.app_context():
+@app.before_first_request
+def test_connection():
     try:
         db.engine.execute("SELECT 1")
         logger.info("✅ Conexión exitosa a la base de datos")
@@ -73,7 +74,8 @@ class Memory(db.Model):
         }
 
 # Crear las tablas de la base de datos
-db.create_all()
+with app.app_context():
+    db.create_all()
 
 # Rutas principales
 @app.route('/')
