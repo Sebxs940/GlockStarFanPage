@@ -26,12 +26,27 @@ config_name = os.environ.get('FLASK_CONFIG', 'default')
 app.config.from_object(config[config_name])
 config[config_name].init_app(app)
 
-# Configurar SQLAlchemy para usar SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///memories.db'
+# Configurar SQLAlchemy para usar PostgreSQL desde Render
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    logger.error("❌ No se encontró DATABASE_URL en las variables de entorno")
+    raise RuntimeError("DATABASE_URL no está configurado")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializar SQLAlchemy
 db = SQLAlchemy(app)
+
+# Probar conexión a la base de datos
+with app.app_context():
+    try:
+        db.engine.execute("SELECT 1")
+        logger.info("✅ Conexión exitosa a la base de datos")
+    except Exception as e:
+        logger.error(f"❌ Error al conectar con la base de datos: {e}")
+        raise e
 
 # Configurar sesión del lado del servidor
 Session(app)
@@ -58,8 +73,7 @@ class Memory(db.Model):
         }
 
 # Crear las tablas de la base de datos
-with app.app_context():
-    db.create_all()
+db.create_all()
 
 # Rutas principales
 @app.route('/')
