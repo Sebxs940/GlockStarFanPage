@@ -7,7 +7,7 @@ import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, quote
 import reddit_api
 from config import config
 
@@ -39,16 +39,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Inicializar SQLAlchemy
 db = SQLAlchemy(app)
 
-# Probar conexión a la base de datos
-@app.before_first_request
-def test_connection():
-    try:
-        db.engine.execute("SELECT 1")
-        logger.info("✅ Conexión exitosa a la base de datos")
-    except Exception as e:
-        logger.error(f"❌ Error al conectar con la base de datos: {e}")
-        raise e
-
 # Configurar sesión del lado del servidor
 Session(app)
 
@@ -76,6 +66,13 @@ class Memory(db.Model):
 # Crear las tablas de la base de datos
 with app.app_context():
     db.create_all()
+    # Probar conexión a la base de datos
+    try:
+        db.session.execute("SELECT 1")
+        logger.info("✅ Conexión exitosa a la base de datos")
+    except Exception as e:
+        logger.error(f"❌ Error al conectar con la base de datos: {e}")
+        raise e
 
 # Rutas principales
 @app.route('/')
