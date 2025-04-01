@@ -57,9 +57,8 @@ class Memory(db.Model):
             'date': self.date
         }
 
-# Función para crear las tablas de la base de datos
-@app.before_first_request
-def create_tables():
+# Crear las tablas de la base de datos
+with app.app_context():
     db.create_all()
 
 # Rutas principales
