@@ -39,6 +39,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Inicializar SQLAlchemy
 db = SQLAlchemy(app)
 
+# Probar conexión a la base de datos
+@app.before_first_request
+def test_connection():
+    try:
+        db.engine.execute("SELECT 1")
+        logger.info("✅ Conexión exitosa a la base de datos")
+    except Exception as e:
+        logger.error(f"❌ Error al conectar con la base de datos: {e}")
+        raise e
+
 # Configurar sesión del lado del servidor
 Session(app)
 
@@ -66,13 +76,6 @@ class Memory(db.Model):
 # Crear las tablas de la base de datos
 with app.app_context():
     db.create_all()
-    # Probar conexión a la base de datos
-    try:
-        db.session.execute("SELECT 1")
-        logger.info("✅ Conexión exitosa a la base de datos")
-    except Exception as e:
-        logger.error(f"❌ Error al conectar con la base de datos: {e}")
-        raise e
 
 # Rutas principales
 @app.route('/')
@@ -110,8 +113,8 @@ def contacto():
             logger.error(f"Error al procesar formulario de contacto: {str(e)}")
             flash('Hubo un error al enviar tu mensaje. Por favor, intenta de nuevo más tarde.', 'error')
             return redirect(url_for('contacto'))
-    
-    return render_template('Contacto.html')
+       
+       return render_template('Contacto.html')
 
 @app.route('/nosotros')
 def nosotros():
@@ -221,40 +224,40 @@ def reddit_callback():
     if error:
         logger.warning(f"Error en callback de Reddit: {error}")
         return redirect(url_for('reddit', error=error))
-    
-    code = request.args.get('code')
-    state = request.args.get('state')
-    
-    if not code:
-        return redirect(url_for('reddit', error='no_code'))
-    
-    token_data = reddit_api.exchange_code_for_token(code, state)
-    if not token_data:
-        return redirect(url_for('reddit', error='token_exchange_failed'))
-    
-    return redirect(url_for('reddit', success='authenticated'))
+       
+       code = request.args.get('code')
+       state = request.args.get('state')
+       
+       if not code:
+           return redirect(url_for('reddit', error='no_code'))
+       
+       token_data = reddit_api.exchange_code_for_token(code, state)
+       if not token_data:
+           return redirect(url_for('reddit', error='token_exchange_failed'))
+       
+       return redirect(url_for('reddit', success='authenticated'))
 
 @app.route('/api/reddit/user')
 def get_reddit_user():
     access_token = session.get('reddit_access_token')
     token_expiry = session.get('reddit_token_expiry')
-    
-    if token_expiry and float(token_expiry) < time.time():
-        if session.get('reddit_refresh_token'):
-            refresh_result = reddit_api.refresh_access_token()
-            if not refresh_result.get('success'):
-                return jsonify({'authenticated': False, 'error': 'Sesión expirada'})
-        else:
-            return jsonify({'authenticated': False})
-    
-    if not access_token:
-        return jsonify({'authenticated': False})
-    
-    username = session.get('reddit_username')
-    return jsonify({
-        'authenticated': True,
-        'username': username
-    })
+       
+       if token_expiry and float(token_expiry) < time.time():
+           if session.get('reddit_refresh_token'):
+               refresh_result = reddit_api.refresh_access_token()
+               if not refresh_result.get('success'):
+                   return jsonify({'authenticated': False, 'error': 'Sesión expirada'})
+           else:
+               return jsonify({'authenticated': False})
+       
+       if not access_token:
+           return jsonify({'authenticated': False})
+       
+       username = session.get('reddit_username')
+       return jsonify({
+           'authenticated': True,
+           'username': username
+       })
 
 @app.route('/api/reddit/posts/<subreddit>')
 def get_reddit_posts(subreddit):
@@ -262,8 +265,8 @@ def get_reddit_posts(subreddit):
         posts_data = reddit_api.get_subreddit_posts(subreddit)
         if not posts_data:
             return jsonify({'success': False, 'error': 'Error al obtener publicaciones'})
-        
-        return jsonify({'success': True, 'data': posts_data})
+       
+       return jsonify({'success': True, 'data': posts_data})
     except Exception as e:
         logger.error(f"Error al obtener publicaciones: {str(e)}")
         return jsonify({'success': False, 'error': 'Error interno del servidor'})
@@ -272,40 +275,40 @@ def get_reddit_posts(subreddit):
 def submit_reddit_post():
     if not session.get('reddit_access_token'):
         return jsonify({'success': False, 'error': 'No estás autenticado'})
-    
-    try:
-        data = request.json
-        if not data:
-            return jsonify({'success': False, 'error': 'Datos no válidos'})
-        
-        subreddit = data.get('subreddit')
-        title = data.get('title')
-        post_type = data.get('type')
-        
-        if not subreddit or not title or not post_type:
-            return jsonify({'success': False, 'error': 'Faltan campos requeridos'})
-        
-        kind = 'self'
-        content = None
-        url = None
-        
-        if post_type == 'text':
-            kind = 'self'
-            content = data.get('content')
-        elif post_type == 'link':
-            kind = 'link'
-            url = data.get('url')
-            if not url:
-                return jsonify({'success': False, 'error': 'URL requerida para publicaciones de tipo enlace'})
-        else:
-            return jsonify({'success': False, 'error': 'Tipo de publicación no válido'})
-        
-        result = reddit_api.submit_post(subreddit, title, kind, content, url)
-        return jsonify(result)
-    
-    except Exception as e:
-        logger.error(f"Error al enviar publicación: {str(e)}")
-        return jsonify({'success': False, 'error': 'Error interno del servidor'})
+       
+       try:
+           data = request.json
+           if not data:
+               return jsonify({'success': False, 'error': 'Datos no válidos'})
+           
+           subreddit = data.get('subreddit')
+           title = data.get('title')
+           post_type = data.get('type')
+           
+           if not subreddit or not title or not post_type:
+               return jsonify({'success': False, 'error': 'Faltan campos requeridos'})
+           
+           kind = 'self'
+           content = None
+           url = None
+           
+           if post_type == 'text':
+               kind = 'self'
+               content = data.get('content')
+           elif post_type == 'link':
+               kind = 'link'
+               url = data.get('url')
+               if not url:
+                   return jsonify({'success': False, 'error': 'URL requerida para publicaciones de tipo enlace'})
+           else:
+               return jsonify({'success': False, 'error': 'Tipo de publicación no válido'})
+           
+           result = reddit_api.submit_post(subreddit, title, kind, content, url)
+           return jsonify(result)
+       
+       except Exception as e:
+           logger.error(f"Error al enviar publicación: {str(e)}")
+           return jsonify({'success': False, 'error': 'Error interno del servidor'})
 
 @app.route('/api/reddit/logout', methods=['POST'])
 def logout_reddit():
@@ -333,5 +336,5 @@ if __name__ == '__main__':
     if not app.config.get('REDDIT_CLIENT_ID') or not app.config.get('REDDIT_CLIENT_SECRET'):
         logger.warning("⚠️ Faltan credenciales de Reddit en el archivo .env")
         print("⚠️ ADVERTENCIA: Faltan credenciales de Reddit en el archivo .env")
-    
-    app.run(debug=app.config['DEBUG'])
+       
+       app.run(debug=app.config['DEBUG'])
