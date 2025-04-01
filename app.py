@@ -121,26 +121,49 @@ def add_memory():
     try:
         title = request.form.get('title')
         story = request.form.get('story')
+        image_file = request.files.get('image')
         image_data = request.form.get('image')
         
-        if not all([title, story, image_data]):
-            return jsonify({'success': False, 'error': 'Datos incompletos'})
+        if not title or not story:
+            return jsonify({'success': False, 'error': 'Datos incompletos: título o historia'})
         
-        # Procesar la imagen
-        if image_data.startswith('data:image'):
-            format_info, base64_str = image_data.split('base64,')
-            image_format = 'png'
-            if 'jpeg' in format_info or 'jpg' in format_info:
-                image_format = 'jpg'
+        if not image_file and not image_data:
+            return jsonify({'success': False, 'error': 'Datos incompletos: imagen no proporcionada'})
+        
+        # Procesar la imagen (ya sea como archivo o como datos base64)
+        if image_file:
+            # Procesar archivo de imagen directamente
+            filename = secure_filename(image_file.filename)
+            image_format = filename.split('.')[-1].lower()
+            if image_format not in ['jpg', 'jpeg', 'png', 'gif']:
+                return jsonify({'success': False, 'error': 'Formato de imagen no válido'})
             
-            image_bytes = base64.b64decode(base64_str)
             image_filename = f"{uuid.uuid4().hex}.{image_format}"
             image_path = os.path.join(UPLOAD_FOLDER, image_filename)
-            
-            with open(image_path, 'wb') as f:
-                f.write(image_bytes)
-                
+            image_file.save(image_path)
             image_url = f"/static/uploads/gallery/{image_filename}"
+            logger.info(f"Imagen guardada como archivo: {image_path}")
+            
+        elif image_data and image_data.startswith('data:image'):
+            # Procesar imagen como datos base64
+            try:
+                format_info, base64_str = image_data.split('base64,')
+                image_format = 'png'
+                if 'jpeg' in format_info or 'jpg' in format_info:
+                    image_format = 'jpg'
+                
+                image_bytes = base64.b64decode(base64_str)
+                image_filename = f"{uuid.uuid4().hex}.{image_format}"
+                image_path = os.path.join(UPLOAD_FOLDER, image_filename)
+                
+                with open(image_path, 'wb') as f:
+                    f.write(image_bytes)
+                    
+                image_url = f"/static/uploads/gallery/{image_filename}"
+                logger.info(f"Imagen guardada desde base64: {image_path}")
+            except Exception as e:
+                logger.error(f"Error al procesar imagen base64: {str(e)}")
+                return jsonify({'success': False, 'error': 'Error al procesar la imagen'})
         else:
             return jsonify({'success': False, 'error': 'Formato de imagen no válido'})
         
@@ -157,6 +180,7 @@ def add_memory():
         # Guardar el recuerdo en la base de datos
         db.session.add(memory)
         db.session.commit()
+        logger.info(f"Recuerdo guardado con éxito: ID {memory_id}")
         
         return jsonify({
             'success': True, 
