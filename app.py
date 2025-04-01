@@ -7,7 +7,8 @@ import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
-from werkzeug.utils import secure_filename, quote
+from werkzeug.utils import secure_filename
+from urllib.parse import quote
 import reddit_api
 from config import config
 
