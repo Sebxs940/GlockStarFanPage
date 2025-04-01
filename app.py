@@ -4,11 +4,7 @@ import uuid
 from datetime import datetime
 import logging
 import time
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_session import Session
-from werkzeug.utils import secure_filename
-from urllib.parse import quote
+from urllib.parse import quote  # Usar quote de la biblioteca estándar
 import reddit_api
 from config import config
 
@@ -18,6 +14,16 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Importar Flask después de configurar logging para capturar cualquier error de importación
+try:
+    from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+    from flask_sqlalchemy import SQLAlchemy
+    from flask_session import Session
+    from werkzeug.utils import secure_filename
+except ImportError as e:
+    logger.critical(f"Error crítico al importar dependencias: {e}")
+    raise
 
 # Crear la aplicación Flask
 app = Flask(__name__)
