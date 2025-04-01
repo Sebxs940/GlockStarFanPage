@@ -352,88 +352,99 @@
     </footer>
 
     <script>
-        // Obtener elementos del DOM
-        const memoryForm = document.getElementById('memory-form');
-        const gallery = document.getElementById('gallery');
-        const noMemoriesMessage = document.querySelector('.no-memories');
+       // Obtener elementos del DOM
+const memoryForm = document.getElementById('memory-form');
+const gallery = document.getElementById('gallery');
+const noMemoriesMessage = document.querySelector('.no-memories');
+
+// Función para formatear la fecha actual
+function getCurrentDate() {
+    const months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    
+    const now = new Date();
+    const day = now.getDate();
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    
+    return `${day} de ${month}, ${year}`;
+}
+
+// Cargar recuerdos guardados en localStorage
+function loadMemories() {
+    const memories = JSON.parse(localStorage.getItem('memories')) || [];
+    
+    // Eliminar el mensaje de "no hay recuerdos" si hay recuerdos
+    if (memories.length > 0 && noMemoriesMessage) {
+        noMemoriesMessage.remove();
+    }
+    
+    memories.forEach(addMemoryToGallery);
+}
+
+// Agregar recuerdo a la galería
+function addMemoryToGallery(memory) {
+    const { title, story, imageData } = memory;
+    const memoryCard = document.createElement('div');
+    memoryCard.className = 'memory-card';
+    memoryCard.innerHTML = `
+        <img src="${imageData}" alt="${title}" class="memory-image">
+        <div class="memory-content">
+            <h3 class="memory-title">${title}</h3>
+            <p class="memory-text">${story}</p>
+            <p class="memory-date">Publicado el ${getCurrentDate()}</p>
+        </div>
+    `;
+    gallery.insertBefore(memoryCard, gallery.firstChild);
+}
+
+// Manejar el envío del formulario
+memoryForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Obtener valores del formulario
+    const title = document.getElementById('memory-title').value;
+    const story = document.getElementById('memory-story').value;
+    const imageFile = document.getElementById('memory-image').files[0];
+    
+    // Verificar que se hayan completado todos los campos
+    if (!title || !story || !imageFile) {
+        alert('Por favor completa todos los campos');
+        return;
+    }
+    
+    // Leer la imagen como Data URL para poder guardarla en localStorage
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const imageData = event.target.result; // Esto es un Data URL
         
-        // Función para formatear la fecha actual
-        function getCurrentDate() {
-            const months = [
-                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-            ];
-            
-            const now = new Date();
-            const day = now.getDate();
-            const month = months[now.getMonth()];
-            const year = now.getFullYear();
-            
-            return `${day} de ${month}, ${year}`;
-        }
+        // Guardar recuerdo en localStorage
+        const memories = JSON.parse(localStorage.getItem('memories')) || [];
+        memories.push({ title, story, imageData });
+        localStorage.setItem('memories', JSON.stringify(memories));
         
-        // Cargar recuerdos guardados en localStorage
-        function loadMemories() {
-            const memories = JSON.parse(localStorage.getItem('memories')) || [];
-            memories.forEach(addMemoryToGallery);
+        // Eliminar el mensaje de "no hay recuerdos" si existe
+        if (noMemoriesMessage) {
+            noMemoriesMessage.remove();
         }
         
         // Agregar recuerdo a la galería
-        function addMemoryToGallery(memory) {
-            const { title, story, imageUrl } = memory;
-            const memoryCard = document.createElement('div');
-            memoryCard.className = 'memory-card';
-            memoryCard.innerHTML = `
-                <img src="${imageUrl}" alt="${title}" class="memory-image">
-                <div class="memory-content">
-                    <h3 class="memory-title">${title}</h3>
-                    <p class="memory-text">${story}</p>
-                    <p class="memory-date">Publicado el ${getCurrentDate()}</p>
-                </div>
-            `;
-            gallery.insertBefore(memoryCard, gallery.firstChild);
-        }
+        addMemoryToGallery({ title, story, imageData });
         
-        // Manejar el envío del formulario
-        memoryForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Obtener valores del formulario
-            const title = document.getElementById('memory-title').value;
-            const story = document.getElementById('memory-story').value;
-            const imageFile = document.getElementById('memory-image').files[0];
-            
-            // Verificar que se hayan completado todos los campos
-            if (!title || !story || !imageFile) {
-                alert('Por favor completa todos los campos');
-                return;
-            }
-            
-            // Crear URL para la imagen seleccionada
-            const imageURL = URL.createObjectURL(imageFile);
-            
-            // Guardar recuerdo en localStorage
-            const memories = JSON.parse(localStorage.getItem('memories')) || [];
-            memories.push({ title, story, imageUrl });
-            localStorage.setItem('memories', JSON.stringify(memories));
-            
-            // Eliminar el mensaje de "no hay recuerdos" si existe
-            if (noMemoriesMessage) {
-                noMemoriesMessage.remove();
-            }
-            
-            // Agregar recuerdo a la galería
-            addMemoryToGallery({ title, story, imageUrl });
-            
-            // Limpiar el formulario
-            memoryForm.reset();
-            
-            // Mostrar mensaje de éxito
-            alert('¡Tu recuerdo ha sido publicado con éxito!');
-        });
+        // Limpiar el formulario
+        memoryForm.reset();
         
-        // Cargar recuerdos al cargar la página
-        window.onload = loadMemories;
+        // Mostrar mensaje de éxito
+        alert('¡Tu recuerdo ha sido publicado con éxito!');
+    };
+    
+    reader.readAsDataURL(imageFile);
+});
+
+// Cargar recuerdos al cargar la página
+window.onload = loadMemories;
     </script>
 </body>
 </html>
