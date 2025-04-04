@@ -1,0 +1,79 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import { getRecuerdoById } from '../../lib/supabase';
+
+// Obtener el ID del recuerdo de los parámetros de la URL
+const { id } = Astro.params;
+
+// Obtener los detalles del recuerdo
+const recuerdo = await getRecuerdoById(id);
+
+// Si no se encuentra el recuerdo, redirigir a la página de recuerdos
+if (!recuerdo) {
+  return Astro.redirect('/recuerdos');
+}
+---
+
+<Layout title={`${recuerdo.titulo} - GlockStarFanPage`}>
+  <Navbar />
+  
+  <main class="min-h-screen py-12 bg-gradient-to-b from-secondary to-gray-900">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <a href="/recuerdos" class="inline-flex items-center text-primary hover:text-purple-400 mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Volver a Recuerdos
+      </a>
+      
+      <div class="bg-secondary border border-primary rounded-lg overflow-hidden shadow-lg">
+        {recuerdo.imagen_url && (
+          <div class="w-full h-64 sm:h-96 overflow-hidden">
+            <img 
+              src={recuerdo.imagen_url} 
+              alt={recuerdo.titulo} 
+              class="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <div class="p-8">
+          <h1 class="text-3xl font-bold text-white mb-4">{recuerdo.titulo}</h1>
+          <p class="text-gray-300 text-lg mb-6">{recuerdo.descripcion}</p>
+          
+          <div class="flex items-center text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+            </svg>
+            <span>
+              {new Date(recuerdo.created_at).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Sección de compartir */}
+      <div class="mt-8 p-6 bg-gray-900 border border-primary rounded-lg">
+        <h2 class="text-xl font-bold text-white mb-4">Comparte este recuerdo</h2>
+        <div class="flex space-x-4">
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <span>Facebook</span>
+          </button>
+          <button class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <span>Instagram</span>
+          </button>
+          <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <span>WhatsApp</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

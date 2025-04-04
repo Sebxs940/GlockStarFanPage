@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #800080; /* Morado */
+  --color-secondary: #000000; /* Negro */
+}
+
+body {
+  background-color: var(--color-secondary);
+  color: white;
+  min-height: 100vh;
+}
